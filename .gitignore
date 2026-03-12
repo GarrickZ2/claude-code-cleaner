@@ -1,0 +1,47 @@
+# Rust / Cargo
+/target/
+**/*.rs.bk
+*.pdb
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# macOS
+.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+
+# Linux
+*~
+.directory
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Environment / secrets
+.env
+.env.*
+*.pem
+*.key
+
+# Editor backups
+*.bak
+*.orig
+*.save
+
+# Debug
+*.dSYM/
+core

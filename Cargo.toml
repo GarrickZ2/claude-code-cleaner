@@ -1,0 +1,24 @@
+[package]
+name = "claude-code-cleaner"
+version = "0.1.0"
+edition = "2021"
+description = "Interactive TUI tool to clean up disk space accumulated by Claude Code (~/.claude/)"
+license = "MIT"
+repository = "https://github.com/GarrickZ2/claude-code-cleaner"
+homepage = "https://github.com/GarrickZ2/claude-code-cleaner"
+readme = "README.md"
+keywords = ["claude", "cli", "tui", "cleaner", "disk-space"]
+categories = ["command-line-utilities"]
+exclude = ["screenshot/*", ".github/*"]
+
+[dependencies]
+ratatui = "0.29"
+crossterm = "0.28"
+tokio = { version = "1", features = ["full"] }
+walkdir = "2"
+chrono = "0.4"
+bytesize = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+dirs = "6"
+color-eyre = "0.6"
