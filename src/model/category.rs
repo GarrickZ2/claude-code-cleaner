@@ -93,7 +93,6 @@ impl Category {
     pub fn is_trim_only(&self) -> bool {
         matches!(self, Category::History)
     }
-
 }
 
 impl fmt::Display for Category {

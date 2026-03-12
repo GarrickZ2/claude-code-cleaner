@@ -8,7 +8,10 @@ use tokio::sync::mpsc;
 #[derive(Debug, Clone)]
 pub enum ScanMessage {
     #[allow(dead_code)]
-    Progress { category: String, scanned: usize },
+    Progress {
+        category: String,
+        scanned: usize,
+    },
     Complete(ScanResult),
     Error(String),
 }
@@ -40,10 +43,7 @@ pub async fn quick_scan(claude_dir: PathBuf) -> color_eyre::Result<ScanResult> {
 }
 
 /// Deep scan with progress reporting via channel.
-pub async fn deep_scan(
-    claude_dir: PathBuf,
-    tx: mpsc::UnboundedSender<ScanMessage>,
-) {
+pub async fn deep_scan(claude_dir: PathBuf, tx: mpsc::UnboundedSender<ScanMessage>) {
     match quick_scan(claude_dir).await {
         Ok(result) => {
             let _ = tx.send(ScanMessage::Complete(result));

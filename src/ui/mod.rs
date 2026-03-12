@@ -1,16 +1,16 @@
-pub mod dashboard;
 pub mod categories;
-pub mod projects;
-pub mod preview;
 pub mod cleaning;
+pub mod dashboard;
+pub mod preview;
+pub mod projects;
 pub mod widgets;
 
 use crate::app::{App, Screen};
-use ratatui::Frame;
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span};
-use ratatui::widgets::{Block, Borders, Paragraph, Clear, Wrap};
+use ratatui::widgets::{Block, Borders, Clear, Paragraph, Wrap};
+use ratatui::Frame;
 
 const LOGO: &[&str] = &[
     r" ╔═╗┬  ┌─┐┬ ┬┌┬┐┌─┐  ╔═╗┌─┐┌┬┐┌─┐  ╔═╗┬  ┌─┐┌─┐┌┐┌┌─┐┬─┐",
@@ -28,11 +28,11 @@ pub fn render(f: &mut Frame, app: &App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(logo_height),    // ASCII art header
-            Constraint::Length(1),              // Horizontal rule
-            Constraint::Length(1),              // Progress bar
-            Constraint::Min(0),                // Content
-            Constraint::Length(1),              // Status bar
+            Constraint::Length(logo_height), // ASCII art header
+            Constraint::Length(1),           // Horizontal rule
+            Constraint::Length(1),           // Progress bar
+            Constraint::Min(0),              // Content
+            Constraint::Length(1),           // Status bar
         ])
         .split(area);
 
@@ -64,7 +64,11 @@ fn render_header(f: &mut Frame, _app: &App, area: Rect, use_full_logo: bool) {
 
     if use_full_logo {
         let widest = LOGO.iter().map(|l| l.chars().count()).max().unwrap_or(0);
-        let base_pad = if width > widest { (width - widest) / 2 } else { 0 };
+        let base_pad = if width > widest {
+            (width - widest) / 2
+        } else {
+            0
+        };
         let padding = " ".repeat(base_pad);
 
         let lines: Vec<Line> = LOGO
@@ -80,10 +84,19 @@ fn render_header(f: &mut Frame, _app: &App, area: Rect, use_full_logo: bool) {
         f.render_widget(Paragraph::new(lines), area);
     } else {
         let text = "Claude Code Cleaner";
-        let pad = if width > text.len() { (width - text.len()) / 2 } else { 0 };
+        let pad = if width > text.len() {
+            (width - text.len()) / 2
+        } else {
+            0
+        };
         let line = Line::from(vec![
             Span::raw(" ".repeat(pad)),
-            Span::styled(text, Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
+            Span::styled(
+                text,
+                Style::default()
+                    .fg(Color::Cyan)
+                    .add_modifier(Modifier::BOLD),
+            ),
         ]);
         f.render_widget(Paragraph::new(line), area);
     }
@@ -106,7 +119,12 @@ fn render_progress_bar(f: &mut Frame, app: &App, area: Rect) {
 
         // Step indicator
         let (dot, dot_style) = if is_current {
-            ("\u{25cf}", Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)) // ●
+            (
+                "\u{25cf}",
+                Style::default()
+                    .fg(Color::Cyan)
+                    .add_modifier(Modifier::BOLD),
+            ) // ●
         } else if is_done {
             ("\u{25cf}", Style::default().fg(Color::Green)) // ●
         } else {
@@ -118,7 +136,9 @@ fn render_progress_bar(f: &mut Frame, app: &App, area: Rect) {
 
         // Step label
         let label_style = if is_current {
-            Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD)
         } else if is_done {
             Style::default().fg(Color::Green)
         } else {
@@ -142,7 +162,9 @@ fn render_progress_bar(f: &mut Frame, app: &App, area: Rect) {
 
 fn render_status_bar(f: &mut Frame, app: &App, area: Rect) {
     let status = if app.scanning {
-        app.scan_progress.clone().unwrap_or_else(|| "Scanning...".into())
+        app.scan_progress
+            .clone()
+            .unwrap_or_else(|| "Scanning...".into())
     } else if app.cleaning {
         if app.settings.dry_run {
             "DRY RUN in progress (no files will be deleted)...".into()
@@ -152,12 +174,18 @@ fn render_status_bar(f: &mut Frame, app: &App, area: Rect) {
     } else {
         let nav_hint = match app.screen {
             Screen::Dashboard => "Enter:Next  s:Rescan  ?:Help  q:Quit",
-            Screen::Categories => "Esc:Back  Enter:Next  Space:Toggle  Left/Right:Adjust  a/n/d:Select",
+            Screen::Categories => {
+                "Esc:Back  Enter:Next  Space:Toggle  Left/Right:Adjust  a/n/d:Select"
+            }
             Screen::Projects => "Esc:Back  Enter:Next  Space:Toggle  /:Search",
             Screen::Preview => "Esc:Back  Enter:Execute  ?:Help",
             Screen::Cleaning => "s:Rescan  q:Quit",
         };
-        let dry_run_hint = if app.settings.dry_run { "  [DRY RUN]" } else { "" };
+        let dry_run_hint = if app.settings.dry_run {
+            "  [DRY RUN]"
+        } else {
+            ""
+        };
         format!("{}{}", nav_hint, dry_run_hint)
     };
 
@@ -173,23 +201,70 @@ fn render_help_overlay(f: &mut Frame, area: Rect) {
     f.render_widget(Clear, help_area);
 
     let help_text = vec![
-        Line::from(Span::styled("Keyboard Shortcuts", Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD))),
+        Line::from(Span::styled(
+            "Keyboard Shortcuts",
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
+        )),
         Line::from(""),
-        Line::from(vec![Span::styled("Enter", Style::default().fg(Color::Yellow)), Span::raw("            Next step")]),
-        Line::from(vec![Span::styled("Esc", Style::default().fg(Color::Yellow)), Span::raw("              Previous step")]),
-        Line::from(vec![Span::styled("1-5", Style::default().fg(Color::Yellow)), Span::raw("              Jump to step")]),
-        Line::from(vec![Span::styled("j/k or Up/Down", Style::default().fg(Color::Yellow)), Span::raw("  Navigate lists")]),
-        Line::from(vec![Span::styled("Space", Style::default().fg(Color::Yellow)), Span::raw("            Toggle selection")]),
-        Line::from(vec![Span::styled("s", Style::default().fg(Color::Yellow)), Span::raw("                Start scan")]),
-        Line::from(vec![Span::styled("a", Style::default().fg(Color::Yellow)), Span::raw("                Select all")]),
-        Line::from(vec![Span::styled("n", Style::default().fg(Color::Yellow)), Span::raw("                Select none")]),
-        Line::from(vec![Span::styled("d", Style::default().fg(Color::Yellow)), Span::raw("                Default selection")]),
-        Line::from(vec![Span::styled("Left/Right", Style::default().fg(Color::Yellow)), Span::raw("       Adjust settings value")]),
-        Line::from(vec![Span::styled("/", Style::default().fg(Color::Yellow)), Span::raw("                Search filter (Projects)")]),
-        Line::from(vec![Span::styled("q / Ctrl-C", Style::default().fg(Color::Yellow)), Span::raw("       Quit")]),
-        Line::from(vec![Span::styled("?", Style::default().fg(Color::Yellow)), Span::raw("                Toggle this help")]),
+        Line::from(vec![
+            Span::styled("Enter", Style::default().fg(Color::Yellow)),
+            Span::raw("            Next step"),
+        ]),
+        Line::from(vec![
+            Span::styled("Esc", Style::default().fg(Color::Yellow)),
+            Span::raw("              Previous step"),
+        ]),
+        Line::from(vec![
+            Span::styled("1-5", Style::default().fg(Color::Yellow)),
+            Span::raw("              Jump to step"),
+        ]),
+        Line::from(vec![
+            Span::styled("j/k or Up/Down", Style::default().fg(Color::Yellow)),
+            Span::raw("  Navigate lists"),
+        ]),
+        Line::from(vec![
+            Span::styled("Space", Style::default().fg(Color::Yellow)),
+            Span::raw("            Toggle selection"),
+        ]),
+        Line::from(vec![
+            Span::styled("s", Style::default().fg(Color::Yellow)),
+            Span::raw("                Start scan"),
+        ]),
+        Line::from(vec![
+            Span::styled("a", Style::default().fg(Color::Yellow)),
+            Span::raw("                Select all"),
+        ]),
+        Line::from(vec![
+            Span::styled("n", Style::default().fg(Color::Yellow)),
+            Span::raw("                Select none"),
+        ]),
+        Line::from(vec![
+            Span::styled("d", Style::default().fg(Color::Yellow)),
+            Span::raw("                Default selection"),
+        ]),
+        Line::from(vec![
+            Span::styled("Left/Right", Style::default().fg(Color::Yellow)),
+            Span::raw("       Adjust settings value"),
+        ]),
+        Line::from(vec![
+            Span::styled("/", Style::default().fg(Color::Yellow)),
+            Span::raw("                Search filter (Projects)"),
+        ]),
+        Line::from(vec![
+            Span::styled("q / Ctrl-C", Style::default().fg(Color::Yellow)),
+            Span::raw("       Quit"),
+        ]),
+        Line::from(vec![
+            Span::styled("?", Style::default().fg(Color::Yellow)),
+            Span::raw("                Toggle this help"),
+        ]),
         Line::from(""),
-        Line::from(Span::styled("Press ? or Esc to close", Style::default().fg(Color::DarkGray))),
+        Line::from(Span::styled(
+            "Press ? or Esc to close",
+            Style::default().fg(Color::DarkGray),
+        )),
     ];
 
     let help = Paragraph::new(help_text)
@@ -212,7 +287,9 @@ fn render_confirm_dialog(f: &mut Frame, area: Rect, dry_run: bool) {
         Line::from(""),
         Line::from(Span::styled(
             "Are you sure you want to proceed with cleaning?",
-            Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD),
+            Style::default()
+                .fg(Color::Yellow)
+                .add_modifier(Modifier::BOLD),
         )),
         Line::from(""),
     ];
@@ -220,7 +297,9 @@ fn render_confirm_dialog(f: &mut Frame, area: Rect, dry_run: bool) {
     if dry_run {
         text.push(Line::from(Span::styled(
             "DRY RUN: No files will actually be deleted.",
-            Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD),
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
         )));
     } else {
         text.push(Line::from(Span::styled(
@@ -231,13 +310,25 @@ fn render_confirm_dialog(f: &mut Frame, area: Rect, dry_run: bool) {
 
     text.push(Line::from(""));
     text.push(Line::from(vec![
-        Span::styled("  Enter", Style::default().fg(Color::Green).add_modifier(Modifier::BOLD)),
+        Span::styled(
+            "  Enter",
+            Style::default()
+                .fg(Color::Green)
+                .add_modifier(Modifier::BOLD),
+        ),
         Span::raw(" = Confirm    "),
-        Span::styled("Esc", Style::default().fg(Color::Red).add_modifier(Modifier::BOLD)),
+        Span::styled(
+            "Esc",
+            Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
+        ),
         Span::raw(" = Cancel"),
     ]));
 
-    let title = if dry_run { " Confirm Dry Run " } else { " Confirm Clean " };
+    let title = if dry_run {
+        " Confirm Dry Run "
+    } else {
+        " Confirm Clean "
+    };
     let title_color = if dry_run { Color::Cyan } else { Color::Red };
 
     let dialog = Paragraph::new(text)

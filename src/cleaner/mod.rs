@@ -1,5 +1,5 @@
-use crate::model::*;
 use crate::model::category::{is_protected, Category};
+use crate::model::*;
 use std::path::Path;
 use tokio::sync::mpsc;
 
@@ -11,7 +11,7 @@ pub enum CleanMessage {
     Progress {
         category: String,
         current_file: String,
-#[allow(dead_code)]
+        #[allow(dead_code)]
         bytes_freed: u64,
         files_done: usize,
         total_files: usize,
@@ -85,7 +85,17 @@ pub async fn execute_clean(
             // Directory
             let dir_path = claude_dir.join(cat_info.category.dir_name());
             if dir_path.is_dir() {
-                match clean_directory(&dir_path, claude_dir, settings, now, expiry_threshold, &tx, &cat_name).await {
+                match clean_directory(
+                    &dir_path,
+                    claude_dir,
+                    settings,
+                    now,
+                    expiry_threshold,
+                    &tx,
+                    &cat_name,
+                )
+                .await
+                {
                     Ok((f, errs)) => {
                         freed = f;
                         errors = errs;
@@ -149,7 +159,17 @@ pub async fn execute_clean(
             }
         } else {
             // Active project: delete only expired files
-            match clean_directory(&proj.data_path, claude_dir, settings, now, expiry_threshold, &tx, &cat_name).await {
+            match clean_directory(
+                &proj.data_path,
+                claude_dir,
+                settings,
+                now,
+                expiry_threshold,
+                &tx,
+                &cat_name,
+            )
+            .await
+            {
                 Ok((freed, errs)) => {
                     total_freed += freed;
                     all_errors.extend(errs.clone());
@@ -183,7 +203,9 @@ pub async fn execute_clean(
             cj.orphan_projects_selected,
             cj.metrics_selected,
             cj.cache_selected,
-        ).await {
+        )
+        .await
+        {
             Ok(saved) => {
                 total_freed += saved;
                 let _ = tx.send(CleanMessage::CategoryDone {
@@ -261,7 +283,11 @@ async fn clean_directory(
                     files_done += 1;
                     let _ = tx.send(CleanMessage::Progress {
                         category: cat_name.to_string(),
-                        current_file: path.file_name().unwrap_or_default().to_string_lossy().to_string(),
+                        current_file: path
+                            .file_name()
+                            .unwrap_or_default()
+                            .to_string_lossy()
+                            .to_string(),
                         bytes_freed: freed,
                         files_done,
                         total_files: total,
@@ -273,7 +299,11 @@ async fn clean_directory(
                             files_done += 1;
                             let _ = tx.send(CleanMessage::Progress {
                                 category: cat_name.to_string(),
-                                current_file: path.file_name().unwrap_or_default().to_string_lossy().to_string(),
+                                current_file: path
+                                    .file_name()
+                                    .unwrap_or_default()
+                                    .to_string_lossy()
+                                    .to_string(),
                                 bytes_freed: freed,
                                 files_done,
                                 total_files: total,

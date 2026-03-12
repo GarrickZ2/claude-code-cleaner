@@ -68,7 +68,13 @@ impl CleanSettings {
     pub fn field_value(&self, index: usize) -> String {
         match index {
             0 => format!("{}", self.expiry_days),
-            1 => if self.dry_run { "Yes".into() } else { "No".into() },
+            1 => {
+                if self.dry_run {
+                    "Yes".into()
+                } else {
+                    "No".into()
+                }
+            }
             _ => String::new(),
         }
     }

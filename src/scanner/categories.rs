@@ -83,7 +83,8 @@ pub fn clean_json_value(
                                     cleaned_proj.insert(pk.clone(), pv.clone());
                                 }
                             }
-                            cleaned_projects.insert(path.clone(), serde_json::Value::Object(cleaned_proj));
+                            cleaned_projects
+                                .insert(path.clone(), serde_json::Value::Object(cleaned_proj));
                         } else {
                             cleaned_projects.insert(path.clone(), proj_value.clone());
                         }
@@ -129,14 +130,18 @@ pub fn scan_config_json(claude_dir: &Path) -> ConfigJsonInfo {
     for (key, value) in obj {
         if JSON_REMOVABLE_TOP_KEYS.iter().any(|k| k == key) {
             info.cache_keys_count += 1;
-            info.cache_size += serde_json::to_string(value).map(|s| s.len() as u64).unwrap_or(0);
+            info.cache_size += serde_json::to_string(value)
+                .map(|s| s.len() as u64)
+                .unwrap_or(0);
         }
     }
 
     // 2. Projects analysis
     if let Some(projects) = obj.get("projects").and_then(|v| v.as_object()) {
         for (path, proj_value) in projects {
-            let entry_size = serde_json::to_string(proj_value).map(|s| s.len() as u64).unwrap_or(0);
+            let entry_size = serde_json::to_string(proj_value)
+                .map(|s| s.len() as u64)
+                .unwrap_or(0);
             if !std::path::Path::new(path).exists() {
                 // Orphan project
                 info.orphan_projects_count += 1;
@@ -146,7 +151,9 @@ pub fn scan_config_json(claude_dir: &Path) -> ConfigJsonInfo {
                 for (pk, pv) in proj_obj {
                     if PROJECT_METRIC_KEYS.iter().any(|k| k == pk) {
                         info.metrics_entries_count += 1;
-                        info.metrics_size += serde_json::to_string(pv).map(|s| s.len() as u64).unwrap_or(0);
+                        info.metrics_size += serde_json::to_string(pv)
+                            .map(|s| s.len() as u64)
+                            .unwrap_or(0);
                     }
                 }
             }
@@ -161,7 +168,10 @@ pub fn scan_config_json(claude_dir: &Path) -> ConfigJsonInfo {
     info
 }
 
-pub async fn scan_category(claude_dir: &Path, category: Category) -> color_eyre::Result<CategoryInfo> {
+pub async fn scan_category(
+    claude_dir: &Path,
+    category: Category,
+) -> color_eyre::Result<CategoryInfo> {
     let mut info = CategoryInfo::new(category);
 
     if category.is_prefix_match() {
@@ -179,7 +189,7 @@ pub async fn scan_category(claude_dir: &Path, category: Category) -> color_eyre:
             if let Ok(meta) = std::fs::metadata(&path) {
                 info.size = meta.len();
                 info.file_count = 1;
-                info.oldest_modified = meta.modified().ok().map(|t| DateTime::<Local>::from(t));
+                info.oldest_modified = meta.modified().ok().map(DateTime::<Local>::from);
             }
         }
     } else {
@@ -194,7 +204,11 @@ pub async fn scan_category(claude_dir: &Path, category: Category) -> color_eyre:
 }
 
 fn scan_directory(dir_path: &Path, info: &mut CategoryInfo) -> color_eyre::Result<()> {
-    for entry in WalkDir::new(dir_path).min_depth(1).into_iter().filter_map(|e| e.ok()) {
+    for entry in WalkDir::new(dir_path)
+        .min_depth(1)
+        .into_iter()
+        .filter_map(|e| e.ok())
+    {
         if entry.file_type().is_file() {
             if let Ok(meta) = entry.metadata() {
                 let file_size = meta.len();
@@ -215,7 +229,11 @@ fn scan_directory(dir_path: &Path, info: &mut CategoryInfo) -> color_eyre::Resul
     Ok(())
 }
 
-fn scan_prefix_files(claude_dir: &Path, prefix: &str, info: &mut CategoryInfo) -> color_eyre::Result<()> {
+fn scan_prefix_files(
+    claude_dir: &Path,
+    prefix: &str,
+    info: &mut CategoryInfo,
+) -> color_eyre::Result<()> {
     if let Ok(entries) = std::fs::read_dir(claude_dir) {
         for entry in entries.filter_map(|e| e.ok()) {
             let name = entry.file_name().to_string_lossy().to_string();

@@ -7,8 +7,10 @@ mod ui;
 
 use app::{App, Screen};
 use crossterm::event::{KeyCode, KeyModifiers};
-use crossterm::terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen};
 use crossterm::execute;
+use crossterm::terminal::{
+    disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen,
+};
 use event::Event;
 use model::Category;
 use ratatui::backend::CrosstermBackend;
@@ -112,10 +114,14 @@ fn coalesce_events(events: Vec<Event>) -> Vec<Event> {
                     continue; // drop Release/Repeat events entirely
                 }
                 match key.code {
-                    KeyCode::Up | KeyCode::Down
-                    | KeyCode::Char('j') | KeyCode::Char('k')
-                    | KeyCode::Left | KeyCode::Right
-                    | KeyCode::Char('h') | KeyCode::Char('l') => {
+                    KeyCode::Up
+                    | KeyCode::Down
+                    | KeyCode::Char('j')
+                    | KeyCode::Char('k')
+                    | KeyCode::Left
+                    | KeyCode::Right
+                    | KeyCode::Char('h')
+                    | KeyCode::Char('l') => {
                         // If last event in result is the same key, skip (we'll
                         // handle the net effect). But keep at most ~1 event per
                         // direction change so cursor still responds smoothly.
@@ -224,14 +230,35 @@ fn handle_key_event(
 
     // Global keys
     match key.code {
-        KeyCode::Char('q') => { app.running = false; return; }
-        KeyCode::Char('?') => { app.show_help = !app.show_help; return; }
+        KeyCode::Char('q') => {
+            app.running = false;
+            return;
+        }
+        KeyCode::Char('?') => {
+            app.show_help = !app.show_help;
+            return;
+        }
         // Number keys to jump to specific step
-        KeyCode::Char('1') => { app.screen = Screen::Dashboard; return; }
-        KeyCode::Char('2') => { app.screen = Screen::Categories; return; }
-        KeyCode::Char('3') => { app.screen = Screen::Projects; return; }
-        KeyCode::Char('4') => { app.screen = Screen::Preview; return; }
-        KeyCode::Char('5') => { app.screen = Screen::Cleaning; return; }
+        KeyCode::Char('1') => {
+            app.screen = Screen::Dashboard;
+            return;
+        }
+        KeyCode::Char('2') => {
+            app.screen = Screen::Categories;
+            return;
+        }
+        KeyCode::Char('3') => {
+            app.screen = Screen::Projects;
+            return;
+        }
+        KeyCode::Char('4') => {
+            app.screen = Screen::Preview;
+            return;
+        }
+        KeyCode::Char('5') => {
+            app.screen = Screen::Cleaning;
+            return;
+        }
         _ => {}
     }
 
@@ -339,11 +366,9 @@ fn handle_categories_keys(app: &mut App, key: KeyCode) {
             } else {
                 app.screen = Screen::Preview;
             }
-            return;
         }
         KeyCode::Esc => {
             app.prev_screen();
-            return;
         }
         KeyCode::Up | KeyCode::Char('k') => {
             if app.category_cursor > 0 {
@@ -368,9 +393,18 @@ fn handle_categories_keys(app: &mut App, key: KeyCode) {
                 SelectSection::ConfigJson => {
                     if let Some(ref mut result) = app.scan_result {
                         match idx {
-                            0 => result.config_json.orphan_projects_selected = !result.config_json.orphan_projects_selected,
-                            1 => result.config_json.metrics_selected = !result.config_json.metrics_selected,
-                            2 => result.config_json.cache_selected = !result.config_json.cache_selected,
+                            0 => {
+                                result.config_json.orphan_projects_selected =
+                                    !result.config_json.orphan_projects_selected
+                            }
+                            1 => {
+                                result.config_json.metrics_selected =
+                                    !result.config_json.metrics_selected
+                            }
+                            2 => {
+                                result.config_json.cache_selected =
+                                    !result.config_json.cache_selected
+                            }
                             _ => {}
                         }
                     }
@@ -435,11 +469,9 @@ fn handle_projects_keys(app: &mut App, key: KeyCode) {
     match key {
         KeyCode::Enter => {
             app.screen = Screen::Preview;
-            return;
         }
         KeyCode::Esc => {
             app.screen = Screen::Categories;
-            return;
         }
         KeyCode::Up | KeyCode::Char('k') => {
             if app.project_cursor > 0 {
@@ -517,15 +549,12 @@ fn handle_cleaning_keys(
     event_tx: &mpsc::UnboundedSender<Event>,
 ) {
     if app.clean_complete {
-        match key {
-            KeyCode::Char('s') => {
-                // Rescan
-                app.clean_complete = false;
-                app.clean_messages.clear();
-                start_scan(claude_dir, event_tx, app);
-                app.screen = Screen::Dashboard;
-            }
-            _ => {}
+        if let KeyCode::Char('s') = key {
+            // Rescan
+            app.clean_complete = false;
+            app.clean_messages.clear();
+            start_scan(claude_dir, event_tx, app);
+            app.screen = Screen::Dashboard;
         }
     }
 }

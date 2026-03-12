@@ -1,11 +1,11 @@
 use crate::app::App;
 use crate::cleaner::CleanMessage;
 use crate::ui::widgets;
-use ratatui::Frame;
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Borders, List, ListItem, Paragraph};
+use ratatui::Frame;
 
 pub fn render(f: &mut Frame, app: &App, area: Rect) {
     let chunks = Layout::default()
@@ -13,32 +13,43 @@ pub fn render(f: &mut Frame, app: &App, area: Rect) {
         .margin(1)
         .constraints([
             Constraint::Length(3), // Progress bar + status
-            Constraint::Min(0),   // Log
+            Constraint::Min(0),    // Log
             Constraint::Length(3), // Summary (if complete)
         ])
         .split(area);
 
     let dry_run = app.settings.dry_run;
-    let block_title = if dry_run { " Clean [DRY RUN] " } else { " Clean " };
+    let block_title = if dry_run {
+        " Clean [DRY RUN] "
+    } else {
+        " Clean "
+    };
     let block = Block::default()
         .borders(Borders::ALL)
         .title(block_title)
-        .title_style(Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD));
+        .title_style(
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
+        );
     f.render_widget(block, area);
 
     // Progress bar + status area
     if app.clean_complete {
         // Completed: full green bar
         let bar_width = chunks[0].width.saturating_sub(2) as usize;
-        let bar_line = Line::from(vec![
-            Span::styled(
-                "\u{2588}".repeat(bar_width),
-                Style::default().fg(if dry_run { Color::Cyan } else { Color::Green }),
-            ),
-        ]);
+        let bar_line = Line::from(vec![Span::styled(
+            "\u{2588}".repeat(bar_width),
+            Style::default().fg(if dry_run { Color::Cyan } else { Color::Green }),
+        )]);
         let status_line = if dry_run {
             Line::from(vec![
-                Span::styled(" DRY RUN COMPLETE ", Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
+                Span::styled(
+                    " DRY RUN COMPLETE ",
+                    Style::default()
+                        .fg(Color::Cyan)
+                        .add_modifier(Modifier::BOLD),
+                ),
                 Span::raw(format!(
                     " Would free {} | {} errors",
                     widgets::format_size(app.clean_total_freed),
@@ -47,7 +58,12 @@ pub fn render(f: &mut Frame, app: &App, area: Rect) {
             ])
         } else {
             Line::from(vec![
-                Span::styled(" COMPLETE ", Style::default().fg(Color::Green).add_modifier(Modifier::BOLD)),
+                Span::styled(
+                    " COMPLETE ",
+                    Style::default()
+                        .fg(Color::Green)
+                        .add_modifier(Modifier::BOLD),
+                ),
                 Span::raw(format!(
                     " Freed {} | {} errors",
                     widgets::format_size(app.clean_total_freed),
@@ -73,13 +89,22 @@ pub fn render(f: &mut Frame, app: &App, area: Rect) {
         let bar_color = if dry_run { Color::Cyan } else { Color::Green };
         let bar_line = Line::from(vec![
             Span::styled("\u{2588}".repeat(filled), Style::default().fg(bar_color)),
-            Span::styled("\u{2591}".repeat(empty), Style::default().fg(Color::DarkGray)),
+            Span::styled(
+                "\u{2591}".repeat(empty),
+                Style::default().fg(Color::DarkGray),
+            ),
         ]);
 
         let status_line = Line::from(vec![
             Span::styled(
-                if dry_run { " DRY RUN... " } else { " CLEANING... " },
-                Style::default().fg(bar_color).add_modifier(Modifier::BOLD | Modifier::SLOW_BLINK),
+                if dry_run {
+                    " DRY RUN... "
+                } else {
+                    " CLEANING... "
+                },
+                Style::default()
+                    .fg(bar_color)
+                    .add_modifier(Modifier::BOLD | Modifier::SLOW_BLINK),
             ),
             Span::raw(format!(
                 " {}% | {} / {}",
@@ -167,16 +192,24 @@ pub fn render(f: &mut Frame, app: &App, area: Rect) {
     // Summary footer
     if app.clean_complete {
         let summary_text = if dry_run {
-            format!("Would free: {} (no files were deleted)", widgets::format_size(app.clean_total_freed))
+            format!(
+                "Would free: {} (no files were deleted)",
+                widgets::format_size(app.clean_total_freed)
+            )
         } else {
-            format!("Total freed: {}", widgets::format_size(app.clean_total_freed))
+            format!(
+                "Total freed: {}",
+                widgets::format_size(app.clean_total_freed)
+            )
         };
         let summary_color = if dry_run { Color::Cyan } else { Color::Green };
         let summary = Paragraph::new(Line::from(vec![
             Span::raw("  "),
             Span::styled(
                 summary_text,
-                Style::default().fg(summary_color).add_modifier(Modifier::BOLD),
+                Style::default()
+                    .fg(summary_color)
+                    .add_modifier(Modifier::BOLD),
             ),
             Span::raw("    "),
             Span::styled("[q]", Style::default().fg(Color::Yellow)),

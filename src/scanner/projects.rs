@@ -26,7 +26,11 @@ pub async fn scan_projects(claude_dir: &Path) -> color_eyre::Result<Vec<ProjectI
         let mut last_modified: Option<DateTime<Local>> = None;
         let mut file_ages: Vec<(DateTime<Local>, u64)> = Vec::new();
 
-        for walk_entry in WalkDir::new(&data_path).min_depth(1).into_iter().filter_map(|e| e.ok()) {
+        for walk_entry in WalkDir::new(&data_path)
+            .min_depth(1)
+            .into_iter()
+            .filter_map(|e| e.ok())
+        {
             if walk_entry.file_type().is_file() {
                 if let Ok(meta) = walk_entry.metadata() {
                     let file_size = meta.len();

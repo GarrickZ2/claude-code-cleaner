@@ -1,17 +1,19 @@
 use crate::app::App;
 use crate::ui::widgets;
-use ratatui::Frame;
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span};
-use ratatui::widgets::{Block, Borders, Paragraph, Row, Table, Scrollbar, ScrollbarOrientation, ScrollbarState};
+use ratatui::widgets::{
+    Block, Borders, Paragraph, Row, Scrollbar, ScrollbarOrientation, ScrollbarState, Table,
+};
+use ratatui::Frame;
 
 pub fn render(f: &mut Frame, app: &App, area: Rect) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
             Constraint::Length(2), // Filter bar
-            Constraint::Min(0),   // Table
+            Constraint::Min(0),    // Table
             Constraint::Length(2), // Summary
         ])
         .split(area);
@@ -19,7 +21,11 @@ pub fn render(f: &mut Frame, app: &App, area: Rect) {
     let block = Block::default()
         .borders(Borders::ALL)
         .title(" Projects ")
-        .title_style(Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD));
+        .title_style(
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
+        );
     f.render_widget(block, area);
 
     // Filter bar (render inside the border, offset by 1)
@@ -33,13 +39,21 @@ pub fn render(f: &mut Frame, app: &App, area: Rect) {
         Line::from(vec![
             Span::styled(" /", Style::default().fg(Color::Yellow)),
             Span::raw(&app.project_filter),
-            Span::styled("_", Style::default().fg(Color::White).add_modifier(Modifier::SLOW_BLINK)),
+            Span::styled(
+                "_",
+                Style::default()
+                    .fg(Color::White)
+                    .add_modifier(Modifier::SLOW_BLINK),
+            ),
         ])
     } else if !app.project_filter.is_empty() {
         Line::from(vec![
             Span::styled(" Filter: ", Style::default().fg(Color::DarkGray)),
             Span::styled(&app.project_filter, Style::default().fg(Color::Yellow)),
-            Span::styled("  (/ to edit, Esc to clear)", Style::default().fg(Color::DarkGray)),
+            Span::styled(
+                "  (/ to edit, Esc to clear)",
+                Style::default().fg(Color::DarkGray),
+            ),
         ])
     } else {
         Line::from(Span::styled(
@@ -82,9 +96,19 @@ pub fn render(f: &mut Frame, app: &App, area: Rect) {
         let header_rows: u16 = 2; // header row + bottom_margin
         let visible_rows = table_area.height.saturating_sub(header_rows) as usize;
 
-        let header = Row::new(vec!["", "Project Path", "Status", "Reclaimable", "Last Modified"])
-            .style(Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD))
-            .bottom_margin(1);
+        let header = Row::new(vec![
+            "",
+            "Project Path",
+            "Status",
+            "Reclaimable",
+            "Last Modified",
+        ])
+        .style(
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
+        )
+        .bottom_margin(1);
 
         // Only render the visible window of rows
         let scroll = app.project_scroll;
@@ -104,13 +128,16 @@ pub fn render(f: &mut Frame, app: &App, area: Rect) {
                 let age = proj
                     .last_modified
                     .as_ref()
-                    .map(|d| widgets::format_age(d))
+                    .map(widgets::format_age)
                     .unwrap_or_else(|| "-".into());
 
                 let path_display = proj.original_path.to_string_lossy().to_string();
                 let max_path_len = table_area.width.saturating_sub(45) as usize;
                 let path_short = if path_display.len() > max_path_len && max_path_len > 4 {
-                    format!("...{}", &path_display[path_display.len() - (max_path_len - 3)..])
+                    format!(
+                        "...{}",
+                        &path_display[path_display.len() - (max_path_len - 3)..]
+                    )
                 } else {
                     path_display
                 };
@@ -134,7 +161,9 @@ pub fn render(f: &mut Frame, app: &App, area: Rect) {
                 };
 
                 let row_style = if is_cursor {
-                    Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)
+                    Style::default()
+                        .fg(Color::Cyan)
+                        .add_modifier(Modifier::BOLD)
                 } else if proj.is_orphan {
                     Style::default().fg(Color::Yellow)
                 } else {
@@ -169,14 +198,14 @@ pub fn render(f: &mut Frame, app: &App, area: Rect) {
 
         // Scrollbar
         if total_items > visible_rows {
-            let mut scrollbar_state = ScrollbarState::new(total_items.saturating_sub(visible_rows))
-                .position(scroll);
+            let mut scrollbar_state =
+                ScrollbarState::new(total_items.saturating_sub(visible_rows)).position(scroll);
             f.render_stateful_widget(
                 Scrollbar::new(ScrollbarOrientation::VerticalRight)
                     .begin_symbol(Some("\u{2191}")) // ↑
-                    .end_symbol(Some("\u{2193}"))   // ↓
+                    .end_symbol(Some("\u{2193}")) // ↓
                     .track_symbol(Some("\u{2502}")) // │
-                    .thumb_symbol("\u{2588}"),       // █
+                    .thumb_symbol("\u{2588}"), // █
                 scrollbar_area,
                 &mut scrollbar_state,
             );
@@ -184,7 +213,9 @@ pub fn render(f: &mut Frame, app: &App, area: Rect) {
 
         // Summary
         let selected_count = result.projects.iter().filter(|p| p.selected).count();
-        let selected_size: u64 = result.projects.iter()
+        let selected_size: u64 = result
+            .projects
+            .iter()
             .filter(|p| p.selected)
             .map(|p| p.expired_size(expiry_days))
             .sum();
@@ -197,22 +228,19 @@ pub fn render(f: &mut Frame, app: &App, area: Rect) {
             String::new()
         };
 
-        let summary = Paragraph::new(Line::from(vec![
-            Span::raw(format!(
-                "  {} projects ({} orphan, {} active) | Selected: {} ({}){}",
-                result.projects.len(),
-                orphan_count,
-                active_count,
-                selected_count,
-                widgets::format_size(selected_size),
-                pos_info,
-            )),
-        ]))
+        let summary = Paragraph::new(Line::from(vec![Span::raw(format!(
+            "  {} projects ({} orphan, {} active) | Selected: {} ({}){}",
+            result.projects.len(),
+            orphan_count,
+            active_count,
+            selected_count,
+            widgets::format_size(selected_size),
+            pos_info,
+        ))]))
         .style(Style::default().fg(Color::DarkGray));
         f.render_widget(summary, summary_area);
     } else {
-        let p = Paragraph::new("No scan data.")
-            .style(Style::default().fg(Color::DarkGray));
+        let p = Paragraph::new("No scan data.").style(Style::default().fg(Color::DarkGray));
         f.render_widget(p, table_area);
     }
 }

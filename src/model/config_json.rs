@@ -32,5 +32,4 @@ impl ConfigJsonInfo {
         }
         total
     }
-
 }

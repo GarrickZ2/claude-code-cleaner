@@ -1,18 +1,18 @@
 use crate::app::{App, SelectSection};
 use crate::model::CleanSettings;
 use crate::ui::widgets;
-use ratatui::Frame;
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Borders, List, ListItem, Paragraph};
+use ratatui::Frame;
 
 pub fn render(f: &mut Frame, app: &App, area: Rect) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .margin(1)
         .constraints([
-            Constraint::Min(0),   // All items
+            Constraint::Min(0),    // All items
             Constraint::Length(3), // Summary
         ])
         .split(area);
@@ -20,7 +20,11 @@ pub fn render(f: &mut Frame, app: &App, area: Rect) {
     let block = Block::default()
         .borders(Borders::ALL)
         .title(" Select & Configure ")
-        .title_style(Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD));
+        .title_style(
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
+        );
     f.render_widget(block, area);
 
     if let Some(ref result) = app.scan_result {
@@ -32,7 +36,9 @@ pub fn render(f: &mut Frame, app: &App, area: Rect) {
             let checkbox = if cat.selected { "[x]" } else { "[ ]" };
             let is_cursor = cur_section == SelectSection::Categories && cur_local == i;
             let style = if is_cursor {
-                Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)
+                Style::default()
+                    .fg(Color::Cyan)
+                    .add_modifier(Modifier::BOLD)
             } else if cat.selected {
                 Style::default().fg(Color::Green)
             } else {
@@ -49,10 +55,17 @@ pub fn render(f: &mut Frame, app: &App, area: Rect) {
                 // Show expired subset vs total
                 format!(
                     "{:>10}  {:>5}/{} files (>{} days)",
-                    widgets::format_size(exp_size), exp_count, cat.file_count, exp_days,
+                    widgets::format_size(exp_size),
+                    exp_count,
+                    cat.file_count,
+                    exp_days,
                 )
             } else {
-                format!("{:>10}  {:>5} files", widgets::format_size(exp_size), exp_count)
+                format!(
+                    "{:>10}  {:>5} files",
+                    widgets::format_size(exp_size),
+                    exp_count
+                )
             };
 
             items.push(ListItem::new(Line::from(vec![
@@ -100,7 +113,9 @@ pub fn render(f: &mut Frame, app: &App, area: Rect) {
             let cursor = if is_cursor { ">" } else { " " };
 
             let style = if is_cursor {
-                Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)
+                Style::default()
+                    .fg(Color::Cyan)
+                    .add_modifier(Modifier::BOLD)
             } else if *selected {
                 Style::default().fg(Color::Green)
             } else {
@@ -139,16 +154,24 @@ pub fn render(f: &mut Frame, app: &App, area: Rect) {
             let cursor = if is_cursor { ">" } else { " " };
 
             let style = if is_cursor {
-                Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)
+                Style::default()
+                    .fg(Color::Cyan)
+                    .add_modifier(Modifier::BOLD)
             } else {
                 Style::default().fg(Color::White)
             };
             let value_style = if is_cursor {
-                Style::default().fg(Color::Green).add_modifier(Modifier::BOLD)
+                Style::default()
+                    .fg(Color::Green)
+                    .add_modifier(Modifier::BOLD)
             } else {
                 Style::default().fg(Color::Yellow)
             };
-            let arrows = if is_cursor { " \u{25c0} \u{25b6} " } else { "     " };
+            let arrows = if is_cursor {
+                " \u{25c0} \u{25b6} "
+            } else {
+                "     "
+            };
 
             items.push(ListItem::new(Line::from(vec![
                 Span::styled(format!(" {} ", cursor), style),
@@ -163,7 +186,12 @@ pub fn render(f: &mut Frame, app: &App, area: Rect) {
 
         // ── Summary ──
         let exp_days = app.settings.expiry_days;
-        let selected_size: u64 = result.categories.iter().filter(|c| c.selected).map(|c| c.expired_size(exp_days)).sum();
+        let selected_size: u64 = result
+            .categories
+            .iter()
+            .filter(|c| c.selected)
+            .map(|c| c.expired_size(exp_days))
+            .sum();
         let selected_count = result.categories.iter().filter(|c| c.selected).count();
         let cj_size = cj.reclaimable_size();
 
@@ -175,7 +203,9 @@ pub fn render(f: &mut Frame, app: &App, area: Rect) {
                     selected_count,
                     widgets::format_size(cj_size),
                 ),
-                Style::default().fg(Color::Green).add_modifier(Modifier::BOLD),
+                Style::default()
+                    .fg(Color::Green)
+                    .add_modifier(Modifier::BOLD),
             ),
             Span::styled(
                 format!("  (~{})", widgets::format_size(selected_size + cj_size)),

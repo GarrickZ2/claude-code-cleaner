@@ -1,5 +1,5 @@
-use crate::model::*;
 use crate::cleaner::CleanMessage;
+use crate::model::*;
 use crate::scanner::ScanMessage;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -152,7 +152,10 @@ impl App {
             CleanMessage::CategoryDone { freed, .. } => {
                 self.clean_freed_so_far += freed;
             }
-            CleanMessage::Complete { total_freed, total_errors } => {
+            CleanMessage::Complete {
+                total_freed,
+                total_errors,
+            } => {
                 self.clean_complete = true;
                 self.cleaning = false;
                 self.clean_total_freed = *total_freed;
@@ -191,7 +194,10 @@ impl App {
     // category_cursor is a unified index across all three sections.
 
     fn cat_count(&self) -> usize {
-        self.scan_result.as_ref().map(|r| r.categories.len()).unwrap_or(0)
+        self.scan_result
+            .as_ref()
+            .map(|r| r.categories.len())
+            .unwrap_or(0)
     }
 
     /// Total navigable items on Select screen
@@ -207,7 +213,10 @@ impl App {
         } else if self.category_cursor < cc + ConfigJsonInfo::ITEM_COUNT {
             (SelectSection::ConfigJson, self.category_cursor - cc)
         } else {
-            (SelectSection::Settings, self.category_cursor - cc - ConfigJsonInfo::ITEM_COUNT)
+            (
+                SelectSection::Settings,
+                self.category_cursor - cc - ConfigJsonInfo::ITEM_COUNT,
+            )
         }
     }
 
@@ -239,9 +248,12 @@ impl App {
             self.preferences.settings = self.settings.clone();
             self.preferences.categories.clear();
             for cat in &result.categories {
-                self.preferences.categories.insert(cat.category.to_string(), cat.selected);
+                self.preferences
+                    .categories
+                    .insert(cat.category.to_string(), cat.selected);
             }
-            self.preferences.config_json_orphans = Some(result.config_json.orphan_projects_selected);
+            self.preferences.config_json_orphans =
+                Some(result.config_json.orphan_projects_selected);
             self.preferences.config_json_metrics = Some(result.config_json.metrics_selected);
             self.preferences.config_json_caches = Some(result.config_json.cache_selected);
             self.preferences.save(claude_dir);

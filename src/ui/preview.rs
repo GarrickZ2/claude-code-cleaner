@@ -1,10 +1,10 @@
 use crate::app::App;
 use crate::ui::widgets;
-use ratatui::Frame;
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Borders, Paragraph, Row, Table};
+use ratatui::Frame;
 
 pub fn render(f: &mut Frame, app: &App, area: Rect) {
     let chunks = Layout::default()
@@ -12,7 +12,7 @@ pub fn render(f: &mut Frame, app: &App, area: Rect) {
         .margin(1)
         .constraints([
             Constraint::Length(4), // 3-segment gauge (label + bar + legend)
-            Constraint::Min(0),   // Summary table
+            Constraint::Min(0),    // Summary table
             Constraint::Length(3), // Action bar
         ])
         .split(area);
@@ -20,7 +20,11 @@ pub fn render(f: &mut Frame, app: &App, area: Rect) {
     let block = Block::default()
         .borders(Borders::ALL)
         .title(" Preview Clean Plan ")
-        .title_style(Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD));
+        .title_style(
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
+        );
     f.render_widget(block, area);
 
     if let Some(ref result) = app.scan_result {
@@ -32,8 +36,16 @@ pub fn render(f: &mut Frame, app: &App, area: Rect) {
         let _kept = total.saturating_sub(matchable);
 
         // Ratios for the 3-segment bar
-        let r_clean = if total > 0 { will_clean as f64 / total as f64 } else { 0.0 };
-        let r_skip = if total > 0 { skipped as f64 / total as f64 } else { 0.0 };
+        let r_clean = if total > 0 {
+            will_clean as f64 / total as f64
+        } else {
+            0.0
+        };
+        let r_skip = if total > 0 {
+            skipped as f64 / total as f64
+        } else {
+            0.0
+        };
 
         let bar_width = chunks[0].width.saturating_sub(2) as usize;
         let green_w = ((r_clean * bar_width as f64).round() as usize)
@@ -49,7 +61,9 @@ pub fn render(f: &mut Frame, app: &App, area: Rect) {
             Span::styled(" Clean: ", Style::default().fg(Color::DarkGray)),
             Span::styled(
                 widgets::format_size(will_clean),
-                Style::default().fg(Color::Green).add_modifier(Modifier::BOLD),
+                Style::default()
+                    .fg(Color::Green)
+                    .add_modifier(Modifier::BOLD),
             ),
             Span::styled("  Skipped: ", Style::default().fg(Color::DarkGray)),
             Span::styled(
@@ -73,10 +87,7 @@ pub fn render(f: &mut Frame, app: &App, area: Rect) {
                 "\u{2588}".repeat(yellow_w),
                 Style::default().fg(Color::Yellow),
             ),
-            Span::styled(
-                "\u{2588}".repeat(red_w),
-                Style::default().fg(Color::Red),
-            ),
+            Span::styled("\u{2588}".repeat(red_w), Style::default().fg(Color::Red)),
         ]);
 
         // Line 3: legend
@@ -84,18 +95,24 @@ pub fn render(f: &mut Frame, app: &App, area: Rect) {
             Span::styled(" \u{25A0}", Style::default().fg(Color::Green)),
             Span::styled(" Will clean  ", Style::default().fg(Color::DarkGray)),
             Span::styled("\u{25A0}", Style::default().fg(Color::Yellow)),
-            Span::styled(" Matchable (unselected)  ", Style::default().fg(Color::DarkGray)),
+            Span::styled(
+                " Matchable (unselected)  ",
+                Style::default().fg(Color::DarkGray),
+            ),
             Span::styled("\u{25A0}", Style::default().fg(Color::Red)),
             Span::styled(" Not matched (kept)", Style::default().fg(Color::DarkGray)),
         ]);
 
-        let bar = Paragraph::new(vec![label_line, bar_line, legend_line])
-            .block(Block::default());
+        let bar = Paragraph::new(vec![label_line, bar_line, legend_line]).block(Block::default());
         f.render_widget(bar, chunks[0]);
 
         // Summary table
         let header = Row::new(vec!["Category", "Files", "Size", "Action"])
-            .style(Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD))
+            .style(
+                Style::default()
+                    .fg(Color::Cyan)
+                    .add_modifier(Modifier::BOLD),
+            )
             .bottom_margin(1);
 
         let mut rows: Vec<Row> = Vec::new();
@@ -133,12 +150,21 @@ pub fn render(f: &mut Frame, app: &App, area: Rect) {
         if !proj_cat_selected {
             let selected_projects: Vec<_> = result.projects.iter().filter(|p| p.selected).collect();
             if !selected_projects.is_empty() {
-                let total_proj_size: u64 = selected_projects.iter().map(|p| p.expired_size(expiry)).sum();
-                let total_proj_files: usize = selected_projects.iter().map(|p| p.expired_count(expiry)).sum();
+                let total_proj_size: u64 = selected_projects
+                    .iter()
+                    .map(|p| p.expired_size(expiry))
+                    .sum();
+                let total_proj_files: usize = selected_projects
+                    .iter()
+                    .map(|p| p.expired_count(expiry))
+                    .sum();
                 let orphan_count = selected_projects.iter().filter(|p| p.is_orphan).count();
                 let active_count = selected_projects.len() - orphan_count;
                 let label = if orphan_count > 0 && active_count > 0 {
-                    format!("Projects ({} orphan + {} active)", orphan_count, active_count)
+                    format!(
+                        "Projects ({} orphan + {} active)",
+                        orphan_count, active_count
+                    )
                 } else if orphan_count > 0 {
                     format!("Projects ({} orphan)", orphan_count)
                 } else {
@@ -161,9 +187,15 @@ pub fn render(f: &mut Frame, app: &App, area: Rect) {
         let cj_reclaimable = cj.reclaimable_size();
         if cj_reclaimable > 0 {
             let mut parts = Vec::new();
-            if cj.orphan_projects_selected { parts.push("orphans"); }
-            if cj.metrics_selected { parts.push("metrics"); }
-            if cj.cache_selected { parts.push("caches"); }
+            if cj.orphan_projects_selected {
+                parts.push("orphans");
+            }
+            if cj.metrics_selected {
+                parts.push("metrics");
+            }
+            if cj.cache_selected {
+                parts.push("caches");
+            }
             rows.push(
                 Row::new(vec![
                     "Config JSON".to_string(),
@@ -189,10 +221,19 @@ pub fn render(f: &mut Frame, app: &App, area: Rect) {
         f.render_widget(table, chunks[1]);
 
         // Action bar
-        let start_label = if app.settings.dry_run { " Start Dry Run  " } else { " Start Cleaning  " };
+        let start_label = if app.settings.dry_run {
+            " Start Dry Run  "
+        } else {
+            " Start Cleaning  "
+        };
         let mut action_spans = vec![
             Span::raw("  "),
-            Span::styled("[Enter]", Style::default().fg(Color::Green).add_modifier(Modifier::BOLD)),
+            Span::styled(
+                "[Enter]",
+                Style::default()
+                    .fg(Color::Green)
+                    .add_modifier(Modifier::BOLD),
+            ),
             Span::raw(start_label),
             Span::styled("[Esc]", Style::default().fg(Color::Yellow)),
             Span::raw(" Go Back  "),
@@ -205,7 +246,9 @@ pub fn render(f: &mut Frame, app: &App, area: Rect) {
         if app.settings.dry_run {
             action_spans.push(Span::styled(
                 "  [DRY RUN]",
-                Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD),
+                Style::default()
+                    .fg(Color::Cyan)
+                    .add_modifier(Modifier::BOLD),
             ));
         }
         let action_bar = Paragraph::new(Line::from(action_spans));

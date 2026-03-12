@@ -1,10 +1,10 @@
 use crate::app::App;
 use crate::ui::widgets;
-use ratatui::Frame;
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Borders, Paragraph, Row, Table, Wrap};
+use ratatui::Frame;
 
 pub fn render(f: &mut Frame, app: &App, area: Rect) {
     let chunks = Layout::default()
@@ -12,7 +12,7 @@ pub fn render(f: &mut Frame, app: &App, area: Rect) {
         .margin(1)
         .constraints([
             Constraint::Length(3), // Header info
-            Constraint::Min(0),   // Category table
+            Constraint::Min(0),    // Category table
             Constraint::Length(3), // Footer
         ])
         .split(area);
@@ -20,26 +20,41 @@ pub fn render(f: &mut Frame, app: &App, area: Rect) {
     let block = Block::default()
         .borders(Borders::ALL)
         .title(" Step 1: Scan ")
-        .title_style(Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD));
+        .title_style(
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
+        );
     f.render_widget(block, area);
 
     // Header
     if let Some(ref result) = app.scan_result {
-        let header = Paragraph::new(vec![
-            Line::from(vec![
-                Span::styled("  ~/.claude/", Style::default().fg(Color::White).add_modifier(Modifier::BOLD)),
-                Span::raw("                                    "),
-                Span::styled(
-                    format!("Total: {}  {} files", widgets::format_size(result.total_size), result.total_files),
-                    Style::default().fg(Color::Yellow),
+        let header = Paragraph::new(vec![Line::from(vec![
+            Span::styled(
+                "  ~/.claude/",
+                Style::default()
+                    .fg(Color::White)
+                    .add_modifier(Modifier::BOLD),
+            ),
+            Span::raw("                                    "),
+            Span::styled(
+                format!(
+                    "Total: {}  {} files",
+                    widgets::format_size(result.total_size),
+                    result.total_files
                 ),
-            ]),
-        ]);
+                Style::default().fg(Color::Yellow),
+            ),
+        ])]);
         f.render_widget(header, chunks[0]);
 
         // Category table
         let header_row = Row::new(vec!["Category", "Size", "Files", "Oldest", "Usage"])
-            .style(Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD))
+            .style(
+                Style::default()
+                    .fg(Color::Cyan)
+                    .add_modifier(Modifier::BOLD),
+            )
             .bottom_margin(1);
 
         let rows: Vec<Row> = result
@@ -51,7 +66,7 @@ pub fn render(f: &mut Frame, app: &App, area: Rect) {
                 let age = cat
                     .oldest_modified
                     .as_ref()
-                    .map(|d| widgets::format_age(d))
+                    .map(widgets::format_age)
                     .unwrap_or_else(|| "-".to_string());
 
                 Row::new(vec![
@@ -92,7 +107,9 @@ pub fn render(f: &mut Frame, app: &App, area: Rect) {
             Span::raw("  Reclaimable (current settings): "),
             Span::styled(
                 format!("~{}", widgets::format_size(reclaimable)),
-                Style::default().fg(Color::Green).add_modifier(Modifier::BOLD),
+                Style::default()
+                    .fg(Color::Green)
+                    .add_modifier(Modifier::BOLD),
             ),
             Span::raw("    "),
             Span::styled("[S]", Style::default().fg(Color::Yellow)),
@@ -105,7 +122,9 @@ pub fn render(f: &mut Frame, app: &App, area: Rect) {
         f.render_widget(footer, chunks[2]);
     } else {
         let msg = if app.scanning {
-            app.scan_progress.clone().unwrap_or_else(|| "Scanning...".into())
+            app.scan_progress
+                .clone()
+                .unwrap_or_else(|| "Scanning...".into())
         } else {
             "Press [S] to scan ~/.claude/ directory".into()
         };

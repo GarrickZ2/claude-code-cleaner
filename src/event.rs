@@ -27,15 +27,9 @@ impl EventHandler {
                 let timeout = tick_rate.saturating_sub(last_tick.elapsed());
 
                 if event::poll(timeout).unwrap_or(false) {
-                    if let Ok(evt) = event::read() {
-                        match evt {
-                            CEvent::Key(key) => {
-                                if event_tx.send(Event::Key(key)).is_err() {
-                                    return;
-                                }
-                            }
-                            // Ignore mouse/resize/etc — don't generate events for them
-                            _ => {}
+                    if let Ok(CEvent::Key(key)) = event::read() {
+                        if event_tx.send(Event::Key(key)).is_err() {
+                            return;
                         }
                     }
                 }
