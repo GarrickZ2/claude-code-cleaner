@@ -212,14 +212,18 @@ pub fn render(f: &mut Frame, app: &App, area: Rect) {
         }
 
         // Summary
-        let selected_count = filtered.iter().map(|&idx| &result.projects[idx]).filter(|p| p.selected).count();
-        let selected_size: u64 = filtered
+        let selected_count = result.projects.iter().filter(|p| p.selected).count();
+        let selected_size: u64 = result
+            .projects
             .iter()
-            .map(|&idx| &result.projects[idx])
             .filter(|p| p.selected)
             .map(|p| p.expired_size(expiry_days))
             .sum();
-        let orphan_count = filtered.iter().map(|&idx| &result.projects[idx]).filter(|p| p.is_orphan).count();
+        let orphan_count = filtered
+            .iter()
+            .map(|&idx| &result.projects[idx])
+            .filter(|p| p.is_orphan)
+            .count();
         let active_count = filtered.len() - orphan_count;
 
         let pos_info = if total_items > 0 {
