@@ -226,6 +226,16 @@ pub fn render(f: &mut Frame, app: &App, area: Rect) {
             .count();
         let active_count = filtered.len() - orphan_count;
 
+        // When a filter is active, show filtered/total so the user can see the left
+        // half (count, orphan, active) is a subset while Selected stays global.
+        let total_count = result.projects.len();
+        let filtered_count = filtered.len();
+        let project_count_str = if filtered_count != total_count {
+            format!("{}/{}", filtered_count, total_count)
+        } else {
+            format!("{}", filtered_count)
+        };
+
         let pos_info = if total_items > 0 {
             format!(" [{}/{}]", app.project_cursor + 1, total_items)
         } else {
@@ -234,7 +244,7 @@ pub fn render(f: &mut Frame, app: &App, area: Rect) {
 
         let summary = Paragraph::new(Line::from(vec![Span::raw(format!(
             "  {} projects ({} orphan, {} active) | Selected: {} ({}){}",
-            filtered.len(),
+            project_count_str,
             orphan_count,
             active_count,
             selected_count,
