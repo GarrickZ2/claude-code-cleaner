@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.1] - 2026-05-11
+
+### Fixed
+
+- Project summary statistics (orphan/active counts) now reflect the filtered result set when a search/filter is active, matching what is displayed in the Projects tab and the Preview tab (#1, #2)
+- Summary now shows `filtered/total` project count when a filter is active, so the relationship between visible rows and full scan is obvious
+- Clippy warnings introduced by Rust 1.95 — `sort_by` replaced with `sort_by_key(Reverse)`; nested `if` blocks inside `match` arms folded into match guards
+
+### Changed
+
+- `Selected` count in the projects summary stays global (across all projects), independent of the current filter, to avoid surprising changes when the search box is edited
+- Filtered project lookup uses `filter_map(.get())` instead of direct indexing for defensive safety
+
 ## [0.1.0] - 2026-03-11
 
 ### Added

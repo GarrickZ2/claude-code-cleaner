@@ -1,6 +1,6 @@
 [package]
 name = "claude-code-cleaner"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "Interactive TUI tool to clean up disk space accumulated by Claude Code (~/.claude/)"
 license = "MIT"
