@@ -65,6 +65,6 @@ pub async fn scan_projects(claude_dir: &Path) -> color_eyre::Result<Vec<ProjectI
     }
 
     // Sort by size descending
-    projects.sort_by(|a, b| b.size.cmp(&a.size));
+    projects.sort_by_key(|p| std::cmp::Reverse(p.size));
     Ok(projects)
 }

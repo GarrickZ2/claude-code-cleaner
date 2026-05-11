@@ -221,7 +221,7 @@ pub fn render(f: &mut Frame, app: &App, area: Rect) {
             .sum();
         let orphan_count = filtered
             .iter()
-            .map(|&idx| &result.projects[idx])
+            .filter_map(|&idx| result.projects.get(idx))
             .filter(|p| p.is_orphan)
             .count();
         let active_count = filtered.len() - orphan_count;

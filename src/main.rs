@@ -323,10 +323,8 @@ fn handle_dashboard_keys(
         KeyCode::Char('s') if !app.scanning => {
             start_scan(claude_dir, event_tx, app);
         }
-        KeyCode::Enter => {
-            if app.scan_result.is_some() {
-                app.next_screen();
-            }
+        KeyCode::Enter if app.scan_result.is_some() => {
+            app.next_screen();
         }
         _ => {}
     }
@@ -370,15 +368,11 @@ fn handle_categories_keys(app: &mut App, key: KeyCode) {
         KeyCode::Esc => {
             app.prev_screen();
         }
-        KeyCode::Up | KeyCode::Char('k') => {
-            if app.category_cursor > 0 {
-                app.category_cursor -= 1;
-            }
+        KeyCode::Up | KeyCode::Char('k') if app.category_cursor > 0 => {
+            app.category_cursor -= 1;
         }
-        KeyCode::Down | KeyCode::Char('j') => {
-            if app.category_cursor < total - 1 {
-                app.category_cursor += 1;
-            }
+        KeyCode::Down | KeyCode::Char('j') if app.category_cursor < total - 1 => {
+            app.category_cursor += 1;
         }
         KeyCode::Char(' ') => {
             let (section, idx) = app.select_cursor_section();
@@ -473,17 +467,13 @@ fn handle_projects_keys(app: &mut App, key: KeyCode) {
         KeyCode::Esc => {
             app.screen = Screen::Categories;
         }
-        KeyCode::Up | KeyCode::Char('k') => {
-            if app.project_cursor > 0 {
-                app.project_cursor -= 1;
-                app.adjust_project_scroll(PROJECT_VISIBLE_ROWS);
-            }
+        KeyCode::Up | KeyCode::Char('k') if app.project_cursor > 0 => {
+            app.project_cursor -= 1;
+            app.adjust_project_scroll(PROJECT_VISIBLE_ROWS);
         }
-        KeyCode::Down | KeyCode::Char('j') => {
-            if count > 0 && app.project_cursor < count - 1 {
-                app.project_cursor += 1;
-                app.adjust_project_scroll(PROJECT_VISIBLE_ROWS);
-            }
+        KeyCode::Down | KeyCode::Char('j') if count > 0 && app.project_cursor < count - 1 => {
+            app.project_cursor += 1;
+            app.adjust_project_scroll(PROJECT_VISIBLE_ROWS);
         }
         KeyCode::Char(' ') => {
             if let Some(&proj_idx) = filtered.get(app.project_cursor) {
