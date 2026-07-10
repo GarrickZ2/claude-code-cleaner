@@ -4,6 +4,13 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag (e.g. v0.1.1); leave empty for snapshot'
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: write
@@ -56,11 +63,23 @@ jobs:
       - name: Build
         run: cargo build --release --target ${{ matrix.target }}
 
+      - name: Determine version
+        id: version
+        shell: bash
+        run: |
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
+            echo "tag=${VERSION_INPUT:-snapshot}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          fi
+        env:
+          VERSION_INPUT: ${{ github.event.inputs.version }}
+
       - name: Package (Unix)
         if: matrix.archive == 'tar.gz'
         shell: bash
         run: |
-          tag="${GITHUB_REF#refs/tags/}"
+          tag="${{ steps.version.outputs.tag }}"
           bin="claude-code-cleaner"
           staging="${bin}-${tag}-${{ matrix.target }}"
           mkdir -p "$staging"
@@ -73,7 +92,7 @@ jobs:
         if: matrix.archive == 'zip'
         shell: pwsh
         run: |
-          $tag = $env:GITHUB_REF -replace 'refs/tags/', ''
+          $tag = "${{ steps.version.outputs.tag }}"
           $bin = "claude-code-cleaner"
           $staging = "${bin}-${tag}-${{ matrix.target }}"
           New-Item -ItemType Directory -Path $staging -Force
@@ -92,6 +111,7 @@ jobs:
   release:
     name: Create Release
     needs: build
+    if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
