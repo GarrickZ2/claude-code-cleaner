@@ -5,16 +5,28 @@ on:
     branches: [master]
   pull_request:
     branches: [master]
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to run CI on'
+        required: false
+        default: 'master'
+        type: string
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
   check:
-    name: Check & Test
-    runs-on: ubuntu-latest
+    name: Check & Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch || github.ref }}
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - run: cargo check

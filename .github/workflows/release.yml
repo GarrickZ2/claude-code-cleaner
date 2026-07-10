@@ -4,6 +4,13 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag (e.g. v0.1.1); leave empty for snapshot'
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: write
@@ -27,6 +34,12 @@ jobs:
           - target: aarch64-apple-darwin
             os: macos-latest
             archive: tar.gz
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+            archive: zip
+          - target: aarch64-pc-windows-msvc
+            os: windows-latest
+            archive: zip
 
     steps:
       - uses: actions/checkout@v4
@@ -50,10 +63,23 @@ jobs:
       - name: Build
         run: cargo build --release --target ${{ matrix.target }}
 
-      - name: Package
+      - name: Determine version
+        id: version
         shell: bash
         run: |
-          tag="${GITHUB_REF#refs/tags/}"
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
+            echo "tag=${VERSION_INPUT:-snapshot}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          fi
+        env:
+          VERSION_INPUT: ${{ github.event.inputs.version }}
+
+      - name: Package (Unix)
+        if: matrix.archive == 'tar.gz'
+        shell: bash
+        run: |
+          tag="${{ steps.version.outputs.tag }}"
           bin="claude-code-cleaner"
           staging="${bin}-${tag}-${{ matrix.target }}"
           mkdir -p "$staging"
@@ -61,6 +87,20 @@ jobs:
           cp README.md CHANGELOG.md "$staging/"
           tar czf "${staging}.tar.gz" "$staging"
           echo "ASSET=${staging}.tar.gz" >> $GITHUB_ENV
+
+      - name: Package (Windows)
+        if: matrix.archive == 'zip'
+        shell: pwsh
+        run: |
+          $tag = "${{ steps.version.outputs.tag }}"
+          $bin = "claude-code-cleaner"
+          $staging = "${bin}-${tag}-${{ matrix.target }}"
+          New-Item -ItemType Directory -Path $staging -Force
+          Copy-Item "target/${{ matrix.target }}/release/${bin}.exe" "$staging/"
+          Copy-Item README.md "$staging/"
+          Copy-Item CHANGELOG.md "$staging/"
+          Compress-Archive -Path $staging -DestinationPath "${staging}.zip"
+          echo "ASSET=${staging}.zip" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -71,6 +111,7 @@ jobs:
   release:
     name: Create Release
     needs: build
+    if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -84,4 +125,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
-          files: artifacts/**/*.tar.gz
+          files: |
+            artifacts/**/*.tar.gz
+            artifacts/**/*.zip
