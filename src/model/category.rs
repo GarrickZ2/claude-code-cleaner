@@ -180,13 +180,75 @@ impl CategoryInfo {
     }
 }
 
-/// Check if a path component is protected
+/// Check whether a path is protected.
+///
+/// Every component of the path (relative to `claude_dir`) is checked, not just
+/// the first one. Protected names can appear at any depth — for example a
+/// `CLAUDE.md` inside a project's data directory, where the first component is
+/// `projects` — and only inspecting the first component let those files through
+/// to `remove_file`.
 pub fn is_protected(path: &Path, claude_dir: &Path) -> bool {
     if let Ok(rel) = path.strip_prefix(claude_dir) {
-        if let Some(first) = rel.components().next() {
-            let name = first.as_os_str().to_string_lossy();
-            return PROTECTED.iter().any(|p| *p == name.as_ref());
-        }
+        return rel.components().any(|component| {
+            let name = component.as_os_str().to_string_lossy();
+            PROTECTED.iter().any(|p| *p == name.as_ref())
+        });
     }
     false
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::path::PathBuf;
+
+    fn claude_dir() -> PathBuf {
+        PathBuf::from("/home/user/.claude")
+    }
+
+    #[test]
+    fn protects_top_level_entries() {
+        assert!(is_protected(
+            &claude_dir().join("settings.json"),
+            &claude_dir()
+        ));
+        assert!(is_protected(
+            &claude_dir().join("skills/my-skill/SKILL.md"),
+            &claude_dir()
+        ));
+    }
+
+    #[test]
+    fn protects_nested_entries() {
+        // First component is `projects`, so the previous first-component-only
+        // check reported these as unprotected and they were deleted.
+        assert!(is_protected(
+            &claude_dir().join("projects/-home-user-app/CLAUDE.md"),
+            &claude_dir()
+        ));
+        assert!(is_protected(
+            &claude_dir().join("projects/-home-user-app/agents/reviewer.md"),
+            &claude_dir()
+        ));
+    }
+
+    #[test]
+    fn does_not_protect_ordinary_session_data() {
+        assert!(!is_protected(
+            &claude_dir().join("projects/-home-user-app/a1b2c3.jsonl"),
+            &claude_dir()
+        ));
+        assert!(!is_protected(
+            &claude_dir().join("telemetry/events.log"),
+            &claude_dir()
+        ));
+    }
+
+    #[test]
+    fn does_not_protect_paths_outside_claude_dir() {
+        assert!(!is_protected(
+            &PathBuf::from("/etc/settings.json"),
+            &claude_dir()
+        ));
+    }
 }
