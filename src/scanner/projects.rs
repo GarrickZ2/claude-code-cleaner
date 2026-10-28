@@ -18,8 +18,9 @@ pub async fn scan_projects(claude_dir: &Path) -> color_eyre::Result<Vec<ProjectI
         }
 
         let dir_name = entry.file_name().to_string_lossy().to_string();
-        let original_path = ProjectInfo::decode_dir_name(&dir_name);
         let data_path = entry.path();
+        let (original_path, path_exists) =
+            ProjectInfo::resolve_original_path(&dir_name, &data_path);
 
         let mut size: u64 = 0;
         let mut file_count: usize = 0;
@@ -49,7 +50,7 @@ pub async fn scan_projects(claude_dir: &Path) -> color_eyre::Result<Vec<ProjectI
             }
         }
 
-        let is_orphan = !original_path.exists();
+        let is_orphan = !path_exists;
 
         projects.push(ProjectInfo {
             dir_name,
